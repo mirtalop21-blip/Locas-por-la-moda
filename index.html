@@ -3,132 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locas por la Moda | Indumentaria Femenina</title>
+    <title>Locas por la Moda | Store Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Montserrat:wght@300;600&display=swap');
+        :root { --gold: #c5a059; }
         body { font-family: 'Montserrat', sans-serif; }
-        .cart-badge { position: absolute; top: -5px; right: -10px; background: #ff4757; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; }
+        .font-title { font-family: 'Marcellus', serif; }
+        .loader { border-top-color: #c5a059; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-white">
 
-    <nav class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 h-20 flex justify-between items-center">
-            <h1 class="text-2xl font-bold tracking-tighter text-gray-800 italic">LOCAS <span class="text-pink-500">X LA MODA</span></h1>
-            <div class="relative cursor-pointer" onclick="toggleCart()">
-                <i class="fas fa-shopping-bag text-2xl text-gray-700"></i>
-                <span id="cart-count" class="cart-badge">0</span>
-            </div>
-        </div>
+    <div id="loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
+        <div class="loader w-12 h-12 border-4 border-gray-200 rounded-full mb-4"></div>
+        <p class="text-[10px] tracking-[0.3em] uppercase font-bold text-gray-400">Actualizando Colección...</p>
+    </div>
+
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b px-6 py-4 flex justify-between items-center">
+        <h1 class="text-2xl font-black italic tracking-tighter font-title">LOCAS <span class="text-amber-600">X LA MODA</span></h1>
+        <button onclick="toggleCart()" class="relative">
+            <i class="fa-solid fa-bag-shopping text-2xl"></i>
+            <span id="cart-count" class="absolute -top-2 -right-2 bg-black text-white text-[10px] px-2 py-0.5 rounded-full">0</span>
+        </button>
     </nav>
 
-    <header class="bg-pink-50 py-16 text-center">
-        <h2 class="text-3xl font-light text-gray-800">Nueva Colección <span class="font-bold">2026</span></h2>
-        <p class="text-gray-500 mt-2 uppercase tracking-widest text-sm">Indumentaria Femenina de Diseño</p>
-    </header>
+    <div id="filter-bar" class="flex gap-4 p-6 overflow-x-auto no-scrollbar border-b">
+        </div>
 
-    <main class="max-w-7xl mx-auto px-4 py-12">
-        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            </div>
-    </main>
+    <main class="p-6 grid grid-cols-2 md:grid-cols-4 gap-6" id="product-grid"></main>
 
-    <div id="cart-modal" class="fixed inset-0 bg-black/50 z-[100] hidden flex justify-end">
-        <div class="bg-white w-full max-w-md h-full p-8 shadow-2xl flex flex-col">
-            <div class="flex justify-between items-center mb-8">
-                <h3 class="text-xl font-bold">Tu Pedido</h3>
+    <div id="cart-modal" class="fixed inset-0 bg-black/50 hidden z-[200] flex justify-end">
+        <div class="bg-white w-full max-w-md h-full p-8 flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-4 mb-4">
+                <h3 class="font-title text-xl uppercase tracking-widest">Mi Pedido</h3>
                 <button onclick="toggleCart()" class="text-2xl">&times;</button>
             </div>
-            <div id="cart-items" class="flex-1 overflow-y-auto space-y-4">
+            <div id="cart-items" class="flex-1 overflow-y-auto space-y-4"></div>
+            <div class="border-t pt-4">
+                <div class="flex justify-between font-bold text-lg mb-4">
+                    <span>Total:</span> <span id="cart-total">$0</span>
                 </div>
-            <div class="border-t pt-6 mt-6">
-                <div class="flex justify-between text-xl font-bold mb-6">
-                    <span>Total:</span>
-                    <span id="cart-total">$0</span>
-                </div>
-                <button onclick="sendWhatsApp()" class="w-full bg-green-500 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-green-600 transition-all">
-                    <i class="fab fa-whatsapp text-xl"></i> ENVIAR PEDIDO POR WHATSAPP
+                <button onclick="sendOrder()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2">
+                    <i class="fab fa-whatsapp"></i> Finalizar por WhatsApp
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN DE TU MARCA
-        const WHATSAPP_NUMBER = "5491166860054"; // Tu número de la tarjeta
+        // PEGA ACÁ TU LINK DE GOOGLE SHEETS (EL QUE TERMINA EN .csv)
+        const SHEET_URL = 'TU_LINK_DE_CSV_AQUÍ';
         
-        const products = [
-            { id: 1, name: "Tapado Camel Soft", price: 45000, img: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?q=80&w=400" },
-            { id: 2, name: "Jean Mom Celeste", price: 28000, img: "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=400" },
-            { id: 3, name: "Blusa Romántica", price: 18500, img: "https://images.unsplash.com/photo-1551163943-3f6a855d1153?q=80&w=400" },
-            { id: 4, name: "Saco de Hilo", price: 22000, img: "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=400" }
-        ];
-
+        let allProducts = [];
         let cart = [];
 
-        function renderProducts() {
-            const grid = document.getElementById('product-grid');
-            grid.innerHTML = products.map(p => `
-                <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                    <img src="${p.img}" class="w-full h-64 object-cover">
-                    <div class="p-4 text-center">
-                        <h4 class="font-bold text-gray-800 text-sm mb-1">${p.name}</h4>
-                        <p class="text-pink-500 font-bold mb-4">$${p.price.toLocaleString()}</p>
-                        <button onclick="addToCart(${p.id})" class="w-full border border-pink-500 text-pink-500 py-2 rounded-lg text-xs font-bold hover:bg-pink-500 hover:text-white transition-all">
-                            AGREGAR
-                        </button>
+        async function loadData() {
+            Papa.parse(SHEET_URL, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    allProducts = results.data.filter(p => p.NOMBRE);
+                    renderFilters();
+                    renderProducts(allProducts);
+                    document.getElementById('loading').classList.add('hidden');
+                }
+            });
+        }
+
+        function renderFilters() {
+            const cats = ['TODOS', ...new Set(allProducts.map(p => p.CATEGORIA))];
+            document.getElementById('filter-bar').innerHTML = cats.map(c => `
+                <button onclick="filter('${c}')" class="whitespace-nowrap px-4 py-2 bg-stone-100 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all">${c}</button>
+            `).join('');
+        }
+
+        function renderProducts(items) {
+            document.getElementById('product-grid').innerHTML = items.map(p => `
+                <div class="group">
+                    <div class="aspect-[3/4] overflow-hidden bg-gray-100 mb-3 relative">
+                        <img src="${p.IMAGEN_URL}" class="w-full h-full object-cover">
+                        <button onclick="addToCart('${p.ID}')" class="absolute bottom-4 left-4 right-4 bg-white/90 py-3 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all shadow-xl">Agregar</button>
                     </div>
+                    <p class="text-[9px] text-amber-600 font-bold tracking-widest uppercase mb-1">${p.CATEGORIA}</p>
+                    <h4 class="text-xs font-semibold mb-1 uppercase">${p.NOMBRE}</h4>
+                    <p class="text-sm font-bold">$${Number(p.PRECIO).toLocaleString()}</p>
                 </div>
             `).join('');
         }
 
+        function filter(c) {
+            const filtered = c === 'TODOS' ? allProducts : allProducts.filter(p => p.CATEGORIA === c);
+            renderProducts(filtered);
+        }
+
         function addToCart(id) {
-            const product = products.find(p => p.id === id);
-            cart.push(product);
+            const p = allProducts.find(x => x.ID == id);
+            cart.push(p);
             updateCart();
+            toggleCart();
         }
 
         function updateCart() {
             document.getElementById('cart-count').innerText = cart.length;
-            const itemsDiv = document.getElementById('cart-items');
-            itemsDiv.innerHTML = cart.map((item, index) => `
-                <div class="flex justify-between items-center border-b pb-2">
-                    <div>
-                        <p class="font-bold text-sm">${item.name}</p>
-                        <p class="text-xs text-gray-500">$${item.price.toLocaleString()}</p>
+            const total = cart.reduce((s, i) => s + Number(i.PRECIO), 0);
+            document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
+            document.getElementById('cart-items').innerHTML = cart.map((item, idx) => `
+                <div class="flex gap-4 items-center border-b pb-2">
+                    <img src="${item.IMAGEN_URL}" class="w-12 h-16 object-cover">
+                    <div class="flex-1 text-[10px]">
+                        <p class="font-bold uppercase">${item.NOMBRE}</p>
+                        <p>$${Number(item.PRECIO).toLocaleString()}</p>
                     </div>
-                    <button onclick="removeFromCart(${index})" class="text-red-400 text-xs">Eliminar</button>
+                    <button onclick="remove(${idx})" class="text-red-400 text-xs"><i class="fas fa-trash"></i></button>
                 </div>
             `).join('');
-            
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
         }
 
-        function removeFromCart(index) {
-            cart.splice(index, 1);
-            updateCart();
+        function remove(idx) { cart.splice(idx, 1); updateCart(); }
+        function toggleCart() { document.getElementById('cart-modal').classList.toggle('hidden'); }
+
+        function sendOrder() {
+            let msg = "¡Hola! ✨ Este es mi pedido en Locas por la Moda:%0A%0A";
+            cart.forEach(i => msg += `- ${i.NOMBRE} ($${i.PRECIO})%0A`);
+            const total = cart.reduce((s, i) => s + Number(i.PRECIO), 0);
+            msg += `%0A*TOTAL: $${total.toLocaleString()}*`;
+            window.open(`https://wa.me/5491166860054?text=${msg}`);
         }
 
-        function toggleCart() {
-            document.getElementById('cart-modal').classList.toggle('hidden');
-        }
-
-        function sendWhatsApp() {
-            if (cart.length === 0) return alert("Tu carrito está vacío");
-            
-            let message = "¡Hola Locas por la Moda! ✨ Quiero realizar el siguiente pedido:%0A%0A";
-            cart.forEach(item => {
-                message += `- ${item.name} ($${item.price.toLocaleString()})%0A`;
-            });
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            message += `%0A*TOTAL: $${total.toLocaleString()}*%0A%0A¿Cómo podemos coordinar el pago y el envío?`;
-            
-            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
-        }
-
-        renderProducts();
+        window.onload = loadData;
     </script>
 </body>
-</html>
+                </html>
