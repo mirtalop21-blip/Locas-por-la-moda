@@ -3,138 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Locas por la Moda | Store Pro</title>
+    <title>Locas por la Moda | Boutique Online</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Montserrat:wght@300;600&display=swap');
-        :root { --gold: #c5a059; }
-        body { font-family: 'Montserrat', sans-serif; }
-        .font-title { font-family: 'Marcellus', serif; }
-        .loader { border-top-color: #c5a059; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700&family=Montserrat:wght@200;400;600&display=swap');
+        :root { --soft-bg: #ffffff; }
+        body { font-family: 'Montserrat', sans-serif; background-color: var(--soft-bg); color: #1a1a1a; scroll-behavior: smooth; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .sidebar { transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1); transform: translateX(-100%); }
+        .sidebar.active { transform: translateX(0); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .video-container video { width: 100%; height: 100%; object-fit: cover; }
+        .product-card img { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .product-card:hover img { transform: scale(1.05); }
     </style>
 </head>
-<body class="bg-white">
+<body>
 
-    <div id="loading" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
-        <div class="loader w-12 h-12 border-4 border-gray-200 rounded-full mb-4"></div>
-        <p class="text-[10px] tracking-[0.3em] uppercase font-bold text-gray-400">Actualizando Colección...</p>
+    <div id="sidebar" class="fixed inset-y-0 left-0 w-80 bg-white z-[100] p-12 sidebar flex flex-col border-r shadow-2xl">
+        <button onclick="toggleSidebar()" class="text-left text-xs tracking-widest uppercase mb-12 font-bold"><i class="fa-solid fa-xmark mr-2"></i> Cerrar</button>
+        <h3 class="font-serif italic text-3xl mb-10 text-stone-800">Colecciones</h3>
+        <nav id="cat-list" class="space-y-6 flex flex-col text-[11px] tracking-[0.3em] uppercase font-semibold">
+            </nav>
+        <div class="mt-auto border-t pt-10 text-[10px] tracking-[0.2em] space-y-4 opacity-40">
+            <a href="https://instagram.com/locas_por_la_moda_17" target="_blank" class="block uppercase">Instagram</a>
+            <a href="https://wa.me/5491166860054" target="_blank" class="block uppercase">Contacto WhatsApp</a>
+        </div>
     </div>
 
-    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b px-6 py-4 flex justify-between items-center">
-        <h1 class="text-2xl font-black italic tracking-tighter font-title">LOCAS <span class="text-amber-600">X LA MODA</span></h1>
-        <button onclick="toggleCart()" class="relative">
-            <i class="fa-solid fa-bag-shopping text-2xl"></i>
-            <span id="cart-count" class="absolute -top-2 -right-2 bg-black text-white text-[10px] px-2 py-0.5 rounded-full">0</span>
-        </button>
+    <nav class="bg-white/90 backdrop-blur-md sticky top-0 z-50 border-b border-gray-50">
+        <div class="max-w-7xl mx-auto px-8 h-24 flex justify-between items-center">
+            <button onclick="toggleSidebar()" class="text-[10px] tracking-[0.2em] font-black uppercase"><i class="fa-solid fa-bars-staggered text-lg"></i></button>
+            <div class="absolute left-1/2 -translate-x-1/2 text-center">
+                <h1 class="font-serif text-2xl md:text-3xl tracking-tighter uppercase font-bold">LOCAS <span class="italic font-normal">X LA MODA</span></h1>
+            </div>
+            <div class="flex gap-5">
+                <a href="https://wa.me/5491166860054" target="_blank" class="text-green-500 text-xl"><i class="fa-brands fa-whatsapp"></i></a>
+            </div>
+        </div>
     </nav>
 
-    <div id="filter-bar" class="flex gap-4 p-6 overflow-x-auto no-scrollbar border-b">
+    <section id="video-section" class="py-12 bg-stone-50 overflow-hidden hidden">
+        <div class="max-w-7xl mx-auto px-8 mb-8 flex justify-between items-end">
+            <h2 class="font-serif text-2xl italic text-stone-700">Looks en movimiento</h2>
+            <span class="text-[8px] tracking-[0.3em] uppercase font-bold opacity-30">Desliza para ver</span>
         </div>
-
-    <main class="p-6 grid grid-cols-2 md:grid-cols-4 gap-6" id="product-grid"></main>
-
-    <div id="cart-modal" class="fixed inset-0 bg-black/50 hidden z-[200] flex justify-end">
-        <div class="bg-white w-full max-w-md h-full p-8 flex flex-col shadow-2xl">
-            <div class="flex justify-between items-center border-b pb-4 mb-4">
-                <h3 class="font-title text-xl uppercase tracking-widest">Mi Pedido</h3>
-                <button onclick="toggleCart()" class="text-2xl">&times;</button>
+        <div id="video-grid" class="flex gap-4 overflow-x-auto px-8 no-scrollbar scroll-smooth">
             </div>
-            <div id="cart-items" class="flex-1 overflow-y-auto space-y-4"></div>
-            <div class="border-t pt-4">
-                <div class="flex justify-between font-bold text-lg mb-4">
-                    <span>Total:</span> <span id="cart-total">$0</span>
-                </div>
-                <button onclick="sendOrder()" class="w-full bg-green-600 text-white py-4 rounded-full font-bold uppercase text-xs tracking-widest flex items-center justify-center gap-2">
-                    <i class="fab fa-whatsapp"></i> Finalizar por WhatsApp
-                </button>
-            </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-8 py-20">
+        <div class="mb-16">
+            <h3 id="current-cat" class="font-serif text-4xl italic mb-4">Nueva Colección</h3>
+            <div class="h-[1px] w-full bg-gray-100"></div>
         </div>
-    </div>
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-20">
+            </div>
+    </main>
+
+    <footer class="py-20 bg-white border-t text-center">
+        <p class="font-serif italic text-2xl mb-4 text-stone-800">Locas por la Moda</p>
+        <p class="text-[9px] tracking-[0.4em] uppercase opacity-40">Merlo, Buenos Aires • Envíos a todo el país</p>
+    </footer>
 
     <script>
-        // PEGA ACÁ TU LINK DE GOOGLE SHEETS (EL QUE TERMINA EN .csv)
-        const SHEET_URL = 'TU_LINK_DE_CSV_AQUÍ';
+        // EL LINK DE TU PLANILLA (CSV)
+        const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1fCVGTaHJH083yc0N4Wu1sNf6pw_VbgXimg5fKagYjfM/gviz/tq?tqx=out:csv';
         
-        let allProducts = [];
-        let cart = [];
+        let products = [];
 
-        async function loadData() {
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+        async function init() {
             Papa.parse(SHEET_URL, {
-                download: true,
-                header: true,
+                download: true, header: true,
                 complete: function(results) {
-                    allProducts = results.data.filter(p => p.NOMBRE);
-                    renderFilters();
-                    renderProducts(allProducts);
-                    document.getElementById('loading').classList.add('hidden');
+                    products = results.data.filter(p => p.NOMBRE);
+                    renderCategories();
+                    renderGrid(products);
+                    renderVideos(products);
                 }
             });
         }
 
-        function renderFilters() {
-            const cats = ['TODOS', ...new Set(allProducts.map(p => p.CATEGORIA))];
-            document.getElementById('filter-bar').innerHTML = cats.map(c => `
-                <button onclick="filter('${c}')" class="whitespace-nowrap px-4 py-2 bg-stone-100 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-black hover:text-white transition-all">${c}</button>
+        function renderCategories() {
+            const cats = ['TODOS', ...new Set(products.map(p => p.CATEGORIA))];
+            document.getElementById('cat-list').innerHTML = cats.map(c => `
+                <button onclick="filter('${c}')" class="text-left hover:text-stone-400 transition-colors">${c}</button>
             `).join('');
         }
 
-        function renderProducts(items) {
-            document.getElementById('product-grid').innerHTML = items.map(p => `
-                <div class="group">
-                    <div class="aspect-[3/4] overflow-hidden bg-gray-100 mb-3 relative">
-                        <img src="${p.IMAGEN_URL}" class="w-full h-full object-cover">
-                        <button onclick="addToCart('${p.ID}')" class="absolute bottom-4 left-4 right-4 bg-white/90 py-3 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all shadow-xl">Agregar</button>
+        function renderVideos(items) {
+            const videos = items.filter(p => p.VIDEO_URL && p.VIDEO_URL.includes('mp4'));
+            const container = document.getElementById('video-grid');
+            if(videos.length > 0) {
+                document.getElementById('video-section').classList.remove('hidden');
+                container.innerHTML = videos.map(v => `
+                    <div class="min-w-[260px] h-[450px] bg-stone-200 video-container relative group">
+                        <video src="${v.VIDEO_URL}" muted loop onmouseover="this.play()" onmouseout="this.pause()" onclick="this.paused ? this.play() : this.pause()"></video>
+                        <div class="absolute bottom-6 left-6 text-white pointer-events-none">
+                            <p class="text-[9px] font-bold uppercase tracking-widest">${v.NOMBRE}</p>
+                        </div>
                     </div>
-                    <p class="text-[9px] text-amber-600 font-bold tracking-widest uppercase mb-1">${p.CATEGORIA}</p>
-                    <h4 class="text-xs font-semibold mb-1 uppercase">${p.NOMBRE}</h4>
-                    <p class="text-sm font-bold">$${Number(p.PRECIO).toLocaleString()}</p>
+                `).join('');
+            }
+        }
+
+        function renderGrid(items) {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = items.map(p => `
+                <div class="group cursor-pointer" onclick="buy('${p.WS_LINK}', '${p.NOMBRE}')">
+                    <div class="aspect-[2/3] overflow-hidden bg-stone-50 mb-8 relative">
+                        <img src="${p.IMAGEN_URL}" class="w-full h-full object-cover grayscale-[10%] group-hover:grayscale-0">
+                        <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
+                            <span class="bg-white/90 backdrop-blur w-full py-4 text-[9px] font-bold tracking-widest uppercase text-center shadow-sm">Ver en WhatsApp</span>
+                        </div>
+                    </div>
+                    <h4 class="text-[10px] tracking-[0.2em] uppercase font-bold mb-2 text-stone-800">${p.NOMBRE}</h4>
+                    <p class="text-stone-400 text-xs font-light italic">$${Number(p.PRECIO).toLocaleString()}</p>
                 </div>
             `).join('');
         }
 
         function filter(c) {
-            const filtered = c === 'TODOS' ? allProducts : allProducts.filter(p => p.CATEGORIA === c);
-            renderProducts(filtered);
+            document.getElementById('current-cat').innerText = c === 'TODOS' ? 'Nueva Colección' : c;
+            const filtered = c === 'TODOS' ? products : products.filter(p => p.CATEGORIA === c);
+            renderGrid(filtered);
+            toggleSidebar();
+            window.scrollTo({top: 400, behavior: 'smooth'});
         }
 
-        function addToCart(id) {
-            const p = allProducts.find(x => x.ID == id);
-            cart.push(p);
-            updateCart();
-            toggleCart();
+        function buy(link, name) {
+            if(link && link.includes('wa.me')) {
+                window.open(link, '_blank');
+            } else {
+                const msg = `Hola! Me interesa el producto: ${name}`;
+                window.open(`https://wa.me/5491166860054?text=${encodeURIComponent(msg)}`, '_blank');
+            }
         }
 
-        function updateCart() {
-            document.getElementById('cart-count').innerText = cart.length;
-            const total = cart.reduce((s, i) => s + Number(i.PRECIO), 0);
-            document.getElementById('cart-total').innerText = `$${total.toLocaleString()}`;
-            document.getElementById('cart-items').innerHTML = cart.map((item, idx) => `
-                <div class="flex gap-4 items-center border-b pb-2">
-                    <img src="${item.IMAGEN_URL}" class="w-12 h-16 object-cover">
-                    <div class="flex-1 text-[10px]">
-                        <p class="font-bold uppercase">${item.NOMBRE}</p>
-                        <p>$${Number(item.PRECIO).toLocaleString()}</p>
-                    </div>
-                    <button onclick="remove(${idx})" class="text-red-400 text-xs"><i class="fas fa-trash"></i></button>
-                </div>
-            `).join('');
-        }
-
-        function remove(idx) { cart.splice(idx, 1); updateCart(); }
-        function toggleCart() { document.getElementById('cart-modal').classList.toggle('hidden'); }
-
-        function sendOrder() {
-            let msg = "¡Hola! ✨ Este es mi pedido en Locas por la Moda:%0A%0A";
-            cart.forEach(i => msg += `- ${i.NOMBRE} ($${i.PRECIO})%0A`);
-            const total = cart.reduce((s, i) => s + Number(i.PRECIO), 0);
-            msg += `%0A*TOTAL: $${total.toLocaleString()}*`;
-            window.open(`https://wa.me/5491166860054?text=${msg}`);
-        }
-
-        window.onload = loadData;
+        init();
     </script>
 </body>
-                </html>
+</html>
